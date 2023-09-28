@@ -4,6 +4,13 @@
 
 ## Header
 
+|  Byte  |           Description           |      Data type      |          Value         | Requried to be this value |                                                                Notes                                                                 |
+|:------:|:-------------------------------:|:-------------------:|:----------------------:|:-------------------------:|--------------------------------------------------------------------------------------------------------------------------------------|
+|  0 - 3 |            File magic           |       char []       |         "TFVM"         |            YES            |                                                                                                                                      |
+|    4   |   Format version number (BCD)   |       uint8_t       |         0x0100         |             NO            | e.g. 0x011A would be v1.1a, 0x0100 would be v1.0, etc. A player (like TFVMPLAY) should only play versions enabled at compile time.   |
+|  5 - 6 |          Flags bitmask          |       uint16_t      |         0x7F04         |             NO            | See [details](#flags) about what flags are supported                                                                                 |
+|    7   | Compression type & Starting FPS |       bitfield      |    47 (gzip, 30fps)    |             NO            | Compression types (3 bits): 0 = raw; 1 = gzip; 2 = zstd; 3 = lzma; 4 = lz4; FPS (5 bits, >> by 1 to store <= 60, only even numbers). |
+| 7 - 64 |            Video Name           | char [] (NULL Term) | NULL Terminated String |             NO            | Any NULL terminated string.  Any remaining space after the end should be padded with NULLs.                                          |
 
 ## Flags
 
