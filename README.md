@@ -46,12 +46,23 @@
 ## Chunk Types
 
 The chunk types have been split up:
-  * `0x00`: NULL Chunk, this will be logged as [LOGLEVEL_INFO](#logging-levels).  Perhaps it is for padding purposes, or perhaps a corrupted file.
+  * <span name="null-chunk">`0x00`: NULL Chunk</span>
+  * Ecountering one of these will be logged as [LOGLEVEL_INFO](#logging-levels).  Perhaps it is for padding purposes, or perhaps a corrupted file.
     *  If the size for said chunk is also 0, this event will be logged is [LOGLEVEL_ERROR](#logging-levels), and the player may choose to:
         * Treat this as fatal, give up attempting to parse the rest of the file.
-        * Try to recover, reading every byte until either:
-          * Finding the next chunk header, continuing playback and logging this with [LOGLEVEL_WARN]
-          * Encountering invalid data (neither more 0's, nor a chunk header), giving up and logging with [LOGLEVEL_FATAL](#logging-levels).
+        * Follow [the recovery chunk parsing rules](#recovery-parsing-rules)
+
+  * `0x01` - `0x2F`: "Normal" Chunks
+     * If encountered, it should follow [the normal parsing rules](#parsing-rules)
+
+  * `0x30` - `0xDF`: Reserved Chunks
+    * These chunks are reserved for future expansion for either normal, special, or any other types of chunks.
+    * If encountered, they should be treated the same as [NULL chunks](#null-chunk)
+ 
+  * `0xE0` - `0xFF`: Special Chunks
+     * These are chunks that perform special functions outside of actual content.
+     * If one should be encountered it follow [the normal parsing rules](#parsing-rules)
+
 
 ### Graphics
 
@@ -79,8 +90,28 @@ The chunk types have been split up:
   * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
   * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
 
-#### FPS Changer
+### FPS Changer
 
-  * `Identifier`: `0x`
-  * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
+  * `Identifier`: `0xE0`
+  * `Data Size`:  Should always be 1, for the 1 byte new FPS.  Otherwise, follow the [recovery chunk parsing rules](#recovery-parsing-rules)
   * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
+
+### Title Changer
+
+ * `Identifer`: `0xE1`
+ * `Data Size`: Size of the new title.  If larger than 80, it shall be truncated to 80, with a [LOGLEVEL_ERROR](#logging-levels) event.
+ * `Data`: The new title to be displayed.
+
+
+## Parsing Rules
+
+The chunk should be compared to the list of chunks that are known to be valid at the compile time of the player.  What happens after depend on the state of the ID.
+  * Known to be valid, and has a corresponding handler: Run the handler
+  * Known to be valid, but has no handler (disabled at compile time, or perhaps just never implemented): Log a warning with [LOGLEVEL_WARN](#logging-levels), and skip this chunk.
+  * **NOT** known to be valid, and as such has no handler: Log an error with [LOGLEVEL_ERROR](#logging-levels), perhaps the file version is incorrect and it actually uses newer features than it's supposed to, or perhaps this plsyer does not follow the specification.
+
+## Recovery Parsing Rules
+
+Try to recover, reading every byte until either:
+  * Finding the next chunk header, continuing playback and logging this with [LOGLEVEL_WARN]
+  * Encountering invalid data (neither more 0's, nor a chunk header), giving up and logging with [LOGLEVEL_FATAL](#logging-levels).
