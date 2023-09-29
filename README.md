@@ -36,12 +36,51 @@
 
 ## Chunk Format
 
-|     Offset     | Data Type |       Field       |  Value | Required to be this value |
-|:--------------:|:---------:|:-----------------:|:------:|:-------------------------:|
-|      0 - 3     |  char []  |    Chunk Magic    | "VMCH" |            YES            |
-|        4       |  uint8_t  |     Identifier    |  0x01  |             NO            |
-|      5 - 6     |  uint16_t |     Data Size     |   775  |             NO            |
-|      7 - 8     |  uint16_t | Frame Data Offset |   125  |             NO            |
-| 8 - (size + 8) |    any    | Data (if not gfx) |        |             NO            |
+|     Offset     | Data Type |    Field    |  Value | Required to be this value |
+|:--------------:|:---------:|:-----------:|:------:|:-------------------------:|
+|      0 - 3     |  char []  | Chunk Magic | "VMCH" |            YES            |
+|        4       |  uint8_t  |  Identifier |  0x01  |             NO            |
+|      5 - 6     |  uint16_t |  Data Size  |   775  |             NO            |
+| 7 - (size + 7) |    any    |     Data    |        |             NO            |
 
+## Chunk Types
 
+The chunk types have been split up:
+  * `0x00`: NULL Chunk, this will be logged as [LOGLEVEL_INFO](#logging-levels).  Perhaps it is for padding purposes, or perhaps a corrupted file.
+    *  If the size for said chunk is also 0, this event will be logged is [LOGLEVEL_ERROR](#logging-levels), and the player may choose to:
+        * Treat this as fatal, give up attempting to parse the rest of the file.
+        * Try to recover, reading every byte until either:
+          * Finding the next chunk header, continuing playback and logging this with [LOGLEVEL_WARN]
+          * Encountering invalid data (neither more 0's, nor a chunk header), giving up and logging with [LOGLEVEL_FATAL](#logging-levels).
+
+### Graphics
+
+  * `Identifier`: `0x01`
+  * `Data Size`:  Size of the uncompressed graphics data in RAM
+  * `Data`: Offset (in frames) of the uncompressed graphics data
+    * It is the choice of the app how it should find this point within the compressed data.
+
+### PC Speaker
+
+  * `Identifier`: `0x02`
+  * `Data Size`:  Size of the PC Speaker instructions data in bytes
+  * `Data`:  The PC Speaker instructions data
+
+### MIDI
+
+  * `Identifier`: `0x03`
+  * `Data Size`:  Size of the MIDI instructions data in bytes
+  * `Data`:  The MIDI instructions data
+    * The first bytes is a [MIDI Device ID Bitmask](#midi-device-id-bitmask), detailing which MIDI card(s) this audio clip should play on.
+
+### SoundBlaster PCM Audio
+
+  * `Identifier`: `0x03`
+  * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
+  * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
+
+#### FPS Changer
+
+  * `Identifier`: `0x`
+  * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
+  * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
