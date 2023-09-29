@@ -46,8 +46,8 @@
 
 The chunk types have been split up:
   * <span name="null-chunk">`0x00`: NULL Chunk</span>
-  * Ecountering one of these will be logged as [LOGLEVEL_INFO](#logging-levels).  Perhaps it is for padding purposes, or perhaps a corrupted file.
-    *  If the size for said chunk is also 0, this event will be logged is [LOGLEVEL_ERROR](#logging-levels), and the player may choose to:
+    * Ecountering one of these will be logged as [LOGLEVEL_INFO](#logging-levels).  Perhaps it is for padding purposes, or perhaps a corrupted file.
+      *  If the size for said chunk is also 0, this event will be logged is [LOGLEVEL_ERROR](#logging-levels), and the player may choose to:
         * Treat this as fatal, give up attempting to parse the rest of the file.
         * Follow [the recovery chunk parsing rules](#recovery-parsing-rules)
 
