@@ -91,13 +91,13 @@ TODO
 
 * `Identifier`: `0x03`
 * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
-* `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
+* `Data`:  The offset in the [compressed PCM data](#compressed-pcm-data)
 
 #### FPS Changer
 
 * `Identifier`: `0xE0`
 * `Data Size`:  Should always be 1, for the 1 byte new FPS.  Otherwise, follow the [recovery chunk parsing rules](#recovery-parsing-rules)
-* `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
+* `Data`:  The offset in the [compressed PCM data](#compressed-pcm-data)
 
 #### Title Changer
 
@@ -118,7 +118,7 @@ After being decompressed (or if stored as raw data), each frame has the followin
 
 | Byte #         | Data Type  | Description | Value  |
 |----------------|------------|-------------|--------|
-| 0-3            | char []    | GfX Magic   | "VMGX" |
+| 0-3            | char []    | Gfx Magic   | "VMGX" |
 | 4-5            | uint16_t   | Size        |        |
 | 6 - (size + 6) | uint8_t [] | Gfx Data    |        |
 
