@@ -114,3 +114,13 @@ The chunk should be compared to the list of chunks that are known to be valid at
 Try to recover, reading every byte until either:
   * Finding the next chunk header, continuing playback and logging this with [LOGLEVEL_WARN]
   * Encountering invalid data (neither more 0's, nor a chunk header), giving up and logging with [LOGLEVEL_FATAL](#logging-levels).
+
+## Logging Levels
+
+There are 5 basic log levels available:
+
+ * `LOGLEVEL_DEBUG` (0): For extremely verbose logs.  For speed purposes, these should be disabled by default at compile time.
+ * `LOGLEVEL_INFO`  (1): Default informational logs.  These should be disabled if it is detected at runtime that your computer is too slow.  If this is the case, the log function will return instantly if the log level is info.
+ * `LOGLEVEL_WARN`  (2): For Warnings.  These should be kept enabled, unless somehow the TVM file is badly formed, causing constant warnings.
+ * `LOGLEVEL_ERROR` (3): Major errors.  For this and below, it should never be allowed to be disabled.
+ * `LOGLEVEL_FATAL` (4): Fatal errors that there is no way to recover from.  This will cause the player to exit, and print the fatal error message in the console.
