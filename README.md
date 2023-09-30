@@ -10,9 +10,9 @@
 |    4   |   Format version number (BCD)   |       uint8_t       |         0x0100         |             NO            | e.g. 0x011A would be v1.1a, 0x0100 would be v1.0, etc. A player (like TFVMPLAY) should only play versions enabled at compile time.   |
 |  5 - 6 |          Flags bitmask          |       uint16_t      |         0x7F04         |             NO            | See [details](#flags) about what flags are supported                                                                                 |
 |    7   | Compression type & Starting FPS |       bitfield      |    47 (gzip, 30fps)    |             NO            | Compression types (3 bits): 0 = raw; 1 = gzip; 2 = zstd; 3 = lzma; 4 = lz4; FPS (5 bits, >> by 1 to store <= 60, only even numbers). |
-| 7 - 64 |            Video Name           | char [] (NULL Term) | NULL Terminated String |             NO            | Any NULL terminated string.  Any remaining space after the end should be padded with NULLs.                                          |
+| 7 - 63 |            Video Name           | char [] (NULL Term) | NULL Terminated String |             NO            | Any NULL terminated string.  Any remaining space after the end should be padded with NULLs.                                          |
 
-## Flags
+### Flags
 
 | Bit # | Description                 | Recommended | What it does to the parsing                                                                                                                          |
 |:-----:|-----------------------------|:-----------:|------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -22,7 +22,7 @@
 |   3   | Enable SoundBlaster Support |      0      | If enabled, the app will try to find and initialize a SoundBlaster compatible card.  This will implicitly disable MIDI.                              |
 |   4   | Enable Title Bar            |      1      | Puts the title on the top of the screen.  Improves rendering performance by drawing a few less characters, at the cost of 1 less graphics line.      |
 |   5   | Enable FPS Changer chunks   |      1      | If disabled, increases speed by jumping over the code for checking for [FPS Changer chunks](#fps-changer)                                            |
-|   6   | Reserved                    |      0      |                                                                                                                                                      |
+|   6   | Enable Partial GFX Chunks   |      1      | If enabled, the partial graphics chunks are supported.  This allows the chunk to only hold a diff of what was changed.                               |
 |   7   | Reserved                    |      0      |                                                                                                                                                      |
 |   8   | Reserved                    |      0      |                                                                                                                                                      |
 |   9   | Reserved                    |      0      |                                                                                                                                                      |
@@ -33,7 +33,7 @@
 |   14  | Reserved                    |      0      |                                                                                                                                                      |
 |   15  | Reserved                    |      0      |                                                                                                                                                      |
 
-## Chunk Format
+### Chunk Format
 
 |     Offset     | Data Type |    Field    |  Value | Required to be this value |
 |:--------------:|:---------:|:-----------:|:------:|:-------------------------:|
@@ -42,7 +42,7 @@
 |      5 - 6     |  uint16_t |  Data Size  |   775  |             NO            |
 | 7 - (size + 7) |    any    |     Data    |        |             NO            |
 
-## Chunk Types
+### Chunk Types
 
 The chunk types have been split up:
 
@@ -63,43 +63,64 @@ The chunk types have been split up:
   * These are chunks that perform special functions outside of actual content.
   * If one should be encountered it follow [the normal parsing rules](#parsing-rules)
 
-### Graphics
+#### Graphics
 
 * `Identifier`: `0x01`
 * `Data Size`:  Size of the uncompressed graphics data in RAM
 * `Data`: Offset (in frames) of the uncompressed graphics data
   * It is the choice of the app how it should find this point within the compressed data.
 
-### PC Speaker
+#### PC Speaker
 
 * `Identifier`: `0x02`
 * `Data Size`:  Size of the PC Speaker instructions data in bytes
 * `Data`:  The PC Speaker instructions data
 
-### MIDI
+#### MIDI
 
 * `Identifier`: `0x03`
 * `Data Size`:  Size of the MIDI instructions data in bytes
 * `Data`:  The MIDI instructions data
   * The first bytes is a [MIDI Device ID Bitmask](#midi-device-id-bitmask), detailing which MIDI card(s) this audio clip should play on.
 
-### SoundBlaster PCM Audio
+##### MIDI Device ID Bitmask
+
+TODO
+
+#### SoundBlaster PCM Audio
 
 * `Identifier`: `0x03`
 * `Data Size`:  Size of the uncompressed PCM Data to push to the sound card.
 * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
 
-### FPS Changer
+#### FPS Changer
 
 * `Identifier`: `0xE0`
 * `Data Size`:  Should always be 1, for the 1 byte new FPS.  Otherwise, follow the [recovery chunk parsing rules](#recovery-parsing-rules)
 * `Data`:  The offset in the [array of compressed PCM data](#compressed-pcm-data)
 
-### Title Changer
+#### Title Changer
 
 * `Identifer`: `0xE1`
 * `Data Size`: Size of the new title.  If larger than 80, it shall be truncated to 80, with a [LOGLEVEL_ERROR](#logging-levels) event.
 * `Data`: The new title to be displayed.
+
+## Data
+
+Now, after the 63 byte header, comes the data, starting at offset `0x40` in the file.
+
+They go in the following order.
+
+### Graphics Data
+
+A giant blob of data (this helps with compression) containing every frame of graphics data.
+After being decompressed (or if stored as raw data), each frame has the following header:
+
+| Byte #         | Data Type  | Description | Value  |
+|----------------|------------|-------------|--------|
+| 0-3            | char []    | GfX Magic   | "VMGX" |
+| 4-5            | uint16_t   | Size        |        |
+| 6 - (size + 6) | uint8_t [] | Gfx Data    |        |
 
 ## Parsing Rules
 
