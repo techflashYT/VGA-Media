@@ -13,6 +13,7 @@
 | 7 - 64 |            Video Name           | char [] (NULL Term) | NULL Terminated String |             NO            | Any NULL terminated string.  Any remaining space after the end should be padded with NULLs.                                          |
 
 ## Flags
+
 | Bit # | Description                 | Recommended | What it does to the parsing                                                                                                                          |
 |:-----:|-----------------------------|:-----------:|------------------------------------------------------------------------------------------------------------------------------------------------------|
 |   0   | Enable Attribute Byte       |      1      | Saves space on disk by not including the color/attribute byte.                                                                                       |
@@ -31,7 +32,6 @@
 |   13  | Reserved                    |      0      |                                                                                                                                                      |
 |   14  | Reserved                    |      0      |                                                                                                                                                      |
 |   15  | Reserved                    |      0      |                                                                                                                                                      |
-
 
 ## Chunk Format
 
