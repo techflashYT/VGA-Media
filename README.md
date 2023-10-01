@@ -122,6 +122,27 @@ After being decompressed (or if stored as raw data), each frame has the followin
 | 4-5            | uint16_t   | Size        |        |
 | 6 - (size + 6) | uint8_t [] | Gfx Data    |        |
 
+It can be accessed via index.  It is accessed like this:
+
+1. Get index of graphics data that you want to access
+2. Start from the beginning of the data, or the last cached position.
+3. Do something like: `chunk->size += (chunk->size + sizeof(chunk))` to skip to the next chunk
+4. Is the current index a multiple of 64?  If so, cache what byte offset we're at so that we don't need to start from the beginning next time.
+5. Are we at the index we want yet?  If not, go back to step #3.  Otherwise return where we are.
+
+### Compressed PCM Data
+
+The compressed PCM Data (for SoundBlaster cards) comes after the final graphics chunk.
+It has a very similar format to the [graphics data](#graphics-data)
+
+| Byte #         | Data Type  | Description | Value  |
+|----------------|------------|-------------|--------|
+| 0-3            | char []    | PCM Magic   | "VMPC" |
+| 4-5            | uint16_t   | Size        |        |
+| 6 - (size + 6) | uint8_t [] | PCM Data    |        |
+
+It can be accessed in the same way as the graphics data.
+
 ## Parsing Rules
 
 The chunk should be compared to the list of chunks that are known to be valid at the compile time of the player.  What happens after depend on the state of the ID.
