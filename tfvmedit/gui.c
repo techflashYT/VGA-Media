@@ -1,10 +1,27 @@
 #include <gtk/gtk.h>
+#include <unistd.h>
 
 static int frame = 0;
 static const int MAX_FRAMES = 10;
 
 static GtkWidget *window, *backButton, *nextButton, *curFrameLabel, *table;
 static GtkWidget *menuBar, *fileMenu, *fileMi, *openMi, *saveMi;
+
+
+static void startQemu() {
+    pid_t pid = fork();
+    if (pid == 0) {
+        // This is the child process. Start QEMU.
+        execlp("qemu-system-x86_64", "qemu-system-x86_64", "-hda", "", NULL);
+        // If we get here, starting QEMU failed.
+        perror("execlp");
+        exit(1);
+    } else if (pid < 0) {
+        // The fork failed.
+        perror("fork");
+        exit(1);
+    }
+}
 
 static void updateLabel() {
 	char str[32];
